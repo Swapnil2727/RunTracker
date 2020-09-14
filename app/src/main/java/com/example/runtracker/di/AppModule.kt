@@ -2,8 +2,7 @@ package com.example.runtracker.di
 
 import android.content.Context
 import androidx.room.Room
-import com.example.runtracker.Constants.RUNNING_DATABASE_NAME
-import com.example.runtracker.R
+import com.example.runtracker.other.Constants.RUNNING_DATABASE_NAME
 import com.example.runtracker.database.RunningDatabase
 import dagger.Module
 import dagger.Provides
