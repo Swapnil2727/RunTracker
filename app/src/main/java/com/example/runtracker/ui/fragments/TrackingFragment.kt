@@ -8,9 +8,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
-import com.example.runtracker.BuildConfig
 import com.example.runtracker.R
-import com.example.runtracker.other.Constants
+import com.example.runtracker.database.Run
 import com.example.runtracker.other.Constants.ACTION_PAUSE_SERVICE
 import com.example.runtracker.other.Constants.ACTION_START_RESUME_SERVICE
 import com.example.runtracker.other.Constants.ACTION_STOP_SERVICE
@@ -22,11 +21,15 @@ import com.example.runtracker.services.Polyline
 import com.example.runtracker.ui.viewModel.MainViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_tracking.*
+import java.util.*
+import javax.inject.Inject
+import kotlin.math.round
 
 @AndroidEntryPoint
 class TrackingFragment: Fragment(R.layout.fragment_tracking) {
@@ -42,6 +45,9 @@ class TrackingFragment: Fragment(R.layout.fragment_tracking) {
 
     private var menu:Menu? = null
 
+    @set:Inject
+    var weight = 80f
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mapView.onCreate(savedInstanceState)
@@ -49,12 +55,19 @@ class TrackingFragment: Fragment(R.layout.fragment_tracking) {
         btnStartRun.setOnClickListener{
             toggleRun()
         }
+
+        btnFinishRun.setOnClickListener {
+            zoomToSeeWholeTrack()
+            endRunAndSaveTodb()
+        }
         mapView.getMapAsync{
             map = it
             addAllPolylines()
         }
         subscribeToObservers()
     }
+
+
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
@@ -90,7 +103,7 @@ class TrackingFragment: Fragment(R.layout.fragment_tracking) {
     private fun showCancelTrackingDialog(){
         val dialog = MaterialAlertDialogBuilder(requireContext(),R.style.AlertDialogTheme)
             .setTitle("Cancel the run?")
-            .setMessage("All the data will be deleted of current run!! ")
+            .setMessage("Current Run will be deleted!!")
             .setIcon(R.drawable.ic_delete)
             .setPositiveButton("Yes"){_,_ ->
                 stopRun()
@@ -158,6 +171,43 @@ class TrackingFragment: Fragment(R.layout.fragment_tracking) {
         }
     }
 
+    private fun zoomToSeeWholeTrack(){
+        val bounds = LatLngBounds.Builder()
+        for(polyline in pathPoints){
+            for (pos in polyline)
+            {
+                bounds.include(pos)
+            }
+        }
+
+        map?.moveCamera(CameraUpdateFactory.newLatLngBounds(
+            bounds.build(),
+            mapView.width, mapView.height, (mapView.height*0.05f).toInt()
+        ))
+    }
+
+    private fun endRunAndSaveTodb(){
+        map?.snapshot {
+            screenshot ->
+            var distanceInMeters = 0
+            for(polyline in pathPoints){
+                distanceInMeters = TrackingUtility.calculatePolylineLength(polyline).toInt()
+            }
+            var avgSpeed = round((distanceInMeters/1000f) /(currentTimeInMillis/1000f/60/60)*10)/10f
+            val dateTimeStamp = Calendar.getInstance().timeInMillis
+
+            val caloriesBurned = ((distanceInMeters/1000f)*weight).toInt()
+
+            val run = Run(screenshot,dateTimeStamp,avgSpeed,distanceInMeters,currentTimeInMillis,caloriesBurned)
+            viewModel.insertRun(run)
+
+            Snackbar.make(
+                requireActivity().findViewById(R.id.rootView), "Run Saved Successfully", Snackbar.LENGTH_LONG
+            ).show()
+
+            stopRun()
+        }
+    }
     private fun addAllPolylines(){
 
         for(polyline in pathPoints){
