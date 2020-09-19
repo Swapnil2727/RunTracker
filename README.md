@@ -11,4 +11,4 @@ Room<br />
 MPAndroidChart<br />
 
 <br/>
-<img src = "1.jpg" width = "200" height="300">
+<img src = "1.jpg" width = "300" height="600">
