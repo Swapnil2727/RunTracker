@@ -1,6 +1,6 @@
 # RunTracker
 Run Tracking APP
-# This app Tracks users locationa and draw path on the map.
+# This app Tracks users location and draw path on the map.
 # This app implemented using
 MVVM<br />
 Dagger-Hilt<br />
