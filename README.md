@@ -17,3 +17,4 @@ MPAndroidChart<br />
 ![Screenshot_20200919-174014_RunningApp](https://user-images.githubusercontent.com/39974969/93661976-823cfb00-fa9f-11ea-8099-d0eb3149b881.jpg)
 ![Screenshot_20200919-174017_RunningApp](https://user-images.githubusercontent.com/39974969/93661977-82d59180-fa9f-11ea-96c6-81e3292f8644.jpg)
 
+<img src = "(https://user-images.githubusercontent.com/39974969/93661971-7f420a80-fa9f-11ea-8900-30dc21239836.jpg">
